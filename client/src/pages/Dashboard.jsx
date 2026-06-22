@@ -1,0 +1,31 @@
+import { useEffect, useState } from "react"
+import Loading from "../components/Loading"
+import EmployeeDashboard from "../components/EmployeeDashboard"
+import AdminDashboard from "../components/AdminDashboard"
+import api from "../api/axios"
+import toast from "react-hot-toast"
+import { getErrorMessage, unwrap } from "../api/helpers"
+import { useAuth } from "../context/AuthContext"
+
+const Dashboard = () => {
+  const { user } = useAuth()
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(()=>{
+    const endpoint = user?.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/employee";
+    api.get(endpoint)
+      .then((res)=> setData(unwrap(res).dashboard))
+      .catch((err)=> toast.error(getErrorMessage(err)))
+      .finally(()=> setLoading(false))
+  },[user?.role])
+
+  if(loading) return <Loading />
+  if(!data) return <p className="text-center text-slate-500 py-12">Failed to load dashboard</p>
+
+  return user?.role === "ADMIN"
+    ? <AdminDashboard data={data}/>
+    : <EmployeeDashboard data={data} user={user}/>
+}
+
+export default Dashboard

@@ -1,0 +1,182 @@
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Outfit:wght@100..900&display=swap");
+@import "tailwindcss";
+
+* {
+    font-family: "Outfit", "Inter", system-ui, sans-serif;
+    letter-spacing: 0;
+}
+
+html {
+    background: #f8fafc;
+}
+
+body {
+    color: #0f172a;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+@layer utilities {
+    .surface-gradient {
+        @apply bg-[radial-gradient(circle_at_top_left,rgba(79,70,229,0.08),transparent_34%),linear-gradient(135deg,#f8fafc_0%,#ffffff_46%,#f5f7fb_100%)];
+    }
+
+    .card {
+        @apply bg-white/92 rounded-xl border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_40px_rgba(15,23,42,0.03)] backdrop-blur;
+    }
+
+    .card-hover {
+        @apply hover:-translate-y-0.5 hover:shadow-[0_1px_2px_rgba(15,23,42,0.05),0_20px_54px_rgba(15,23,42,0.08)] transition-all duration-200;
+    }
+
+    .btn-primary {
+        @apply bg-linear-to-r from-indigo-600 to-indigo-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium
+            hover:from-indigo-700 hover:to-indigo-600 transition-all duration-150 shadow-sm shadow-indigo-500/20
+            active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed;
+    }
+
+    .btn-secondary {
+        @apply bg-white text-slate-700 border border-slate-200 px-4 py-2.5 rounded-lg text-sm font-medium
+            hover:bg-slate-50 hover:border-slate-300 hover:text-slate-950 active:scale-[0.98] transition-all duration-150 disabled:opacity-60;
+    }
+
+    .btn-ghost {
+        @apply text-slate-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-100 hover:text-slate-950 active:scale-[0.98] transition-all duration-150;
+    }
+
+    input,
+    select,
+    textarea {
+        @apply w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg
+            focus:outline-none focus:ring-4 focus:ring-indigo-500/12 focus:border-indigo-400
+            hover:border-slate-300 transition-all duration-150 text-sm placeholder:text-slate-400 shadow-[0_1px_0_rgba(15,23,42,0.02)];
+    }
+
+    label {
+        @apply text-sm font-medium text-slate-700;
+    }
+
+    .table-modern {
+        @apply w-full text-left text-sm border-separate border-spacing-0;
+    }
+
+    .table-modern thead {
+        @apply text-[11px] font-semibold text-slate-500 uppercase tracking-[0.08em];
+    }
+
+    .table-modern thead th {
+        @apply px-5 py-3.5 bg-slate-50/90 border-b border-slate-200/80 whitespace-nowrap;
+    }
+
+    .table-modern tbody {
+        @apply divide-y divide-slate-100;
+    }
+
+    .table-modern tbody tr {
+        @apply hover:bg-indigo-50/25 transition-colors duration-150;
+    }
+
+    .table-modern tbody td {
+        @apply px-5 py-4 align-middle text-slate-600;
+    }
+
+    .badge {
+        @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+    }
+
+    .badge-success {
+        @apply bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10;
+    }
+
+    .badge-warning {
+        @apply bg-amber-50 text-amber-700 ring-1 ring-amber-600/10;
+    }
+
+    .badge-danger {
+        @apply bg-rose-50 text-rose-700 ring-1 ring-rose-600/10;
+    }
+
+    .page-header {
+        @apply mb-7;
+    }
+
+    .page-title {
+        @apply text-2xl sm:text-[28px] leading-tight font-semibold text-slate-950 tracking-tight;
+    }
+
+    .page-subtitle {
+        @apply text-slate-500 text-sm mt-1.5 leading-6;
+    }
+
+    .section-title {
+        @apply text-base font-semibold text-slate-950;
+    }
+
+    .empty-state {
+        @apply text-center py-14 px-6 text-slate-500;
+    }
+
+    .skeleton {
+        @apply relative overflow-hidden bg-slate-200/70 rounded-lg;
+    }
+
+    .skeleton::after {
+        content: "";
+        @apply absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/65 to-transparent;
+        animation: shimmer 1.35s infinite;
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.28s ease-out;
+    }
+
+    .animate-slide-up {
+        animation: slideUp 0.28s ease-out;
+    }
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+}
+
+::selection {
+    @apply bg-indigo-100 text-indigo-900;
+}
