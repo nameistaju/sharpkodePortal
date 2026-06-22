@@ -13,7 +13,8 @@ export function AuthProvider({children}){
 
     const refreshSession = async () => {
         const storedToken = localStorage.getItem("token")
-        if(!storedToken){
+        const storedRefreshToken = localStorage.getItem("refreshToken")
+        if(!storedToken && !storedRefreshToken){
             setUser(null);
             setToken(null);
             setLoading(false);
@@ -48,15 +49,24 @@ export function AuthProvider({children}){
 
     const logout = async ()=>{
         const refreshToken = localStorage.getItem("refreshToken");
-        try {
-            if(refreshToken) await api.post("/auth/logout", { refreshToken });
-        } catch {
-            // Session cleanup should still happen locally if the server is unavailable.
-        }
+        const isAdmin = user?.role === "ADMIN";
+
+        // Clear local auth state immediately and synchronously to prevent refresh loops on redirect
         localStorage.removeItem("token")
         localStorage.removeItem("refreshToken")
         setToken(null);
         setUser(null);
+        setLoading(false);
+
+        // Perform fire-and-forget backend logout request in background
+        if (refreshToken) {
+            api.post("/auth/logout", { refreshToken }).catch(() => {
+                // Ignore logout call errors
+            });
+        }
+
+        // Redirect to appropriate login page immediately
+        window.location.href = isAdmin ? "/login/admin" : "/login/employee";
     }
 
     const value = {user, token, loading, login, logout, refreshSession, setUser}

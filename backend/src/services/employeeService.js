@@ -59,9 +59,15 @@ export const getEmployees = async (query) => {
 };
 
 export const getEmployeeById = async (employeeId) => {
+  const reqStart = performance.now();
   const employee = await Employee.findById(employeeId)
     .select(publicFields)
     .populate('assignedClients', 'clientName status services');
+  const reqEnd = performance.now();
+
+  console.log(`[PERF_AUDIT] GET /employees/me/profile:
+  - total_duration: ${(reqEnd - reqStart).toFixed(2)}ms
+  - db_query_duration: ${(reqEnd - reqStart).toFixed(2)}ms`);
 
   if (!employee) throw new AppError('Employee not found', 404);
 

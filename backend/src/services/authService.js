@@ -51,9 +51,26 @@ const issueTokenPair = async (user, reqMeta) => {
 };
 
 export const login = async ({ email, password }, reqMeta = {}) => {
-  const user = await Employee.findOne({ email }).select('+password +tokenVersion');
+  const reqStart = performance.now();
 
-  if (!user || !(await user.comparePassword(password))) {
+  const dbQueryStart = performance.now();
+  const user = await Employee.findOne({ email }).select('+password +tokenVersion');
+  const dbQueryEnd = performance.now();
+
+  if (!user) {
+    logger.warn('login_failed', {
+      email,
+      ipAddress: reqMeta.ipAddress,
+      userAgent: reqMeta.userAgent
+    });
+    throw new AppError('Invalid email or password', 401);
+  }
+
+  const bcryptStart = performance.now();
+  const isMatch = await user.comparePassword(password);
+  const bcryptEnd = performance.now();
+
+  if (!isMatch) {
     logger.warn('login_failed', {
       email,
       ipAddress: reqMeta.ipAddress,
@@ -72,7 +89,17 @@ export const login = async ({ email, password }, reqMeta = {}) => {
     throw new AppError('This account is inactive', 403);
   }
 
+  const jwtStart = performance.now();
   const { accessToken, refreshToken } = await issueTokenPair(user, reqMeta);
+  const jwtEnd = performance.now();
+
+  const reqEnd = performance.now();
+
+  console.log(`[PERF_AUDIT] POST /auth/login:
+  - total_duration: ${(reqEnd - reqStart).toFixed(2)}ms
+  - db_query_duration: ${(dbQueryEnd - dbQueryStart).toFixed(2)}ms
+  - bcrypt_compare_duration: ${(bcryptEnd - bcryptStart).toFixed(2)}ms
+  - jwt_gen_duration: ${(jwtEnd - jwtStart).toFixed(2)}ms`);
 
   return {
     accessToken,
@@ -134,7 +161,13 @@ export const refresh = async (refreshToken, reqMeta = {}) => {
 };
 
 export const getCurrentUser = async (userId) => {
+  const reqStart = performance.now();
   const user = await Employee.findById(userId).select(publicEmployeeFields);
+  const reqEnd = performance.now();
+
+  console.log(`[PERF_AUDIT] GET /auth/me:
+  - total_duration: ${(reqEnd - reqStart).toFixed(2)}ms
+  - db_query_duration: ${(reqEnd - reqStart).toFixed(2)}ms`);
 
   if (!user) {
     throw new AppError('User not found', 404);

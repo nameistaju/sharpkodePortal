@@ -27,7 +27,18 @@ api.interceptors.response.use(
         const originalRequest = error.config;
         const refreshToken = localStorage.getItem("refreshToken");
 
-        if(error.response?.status !== 401 || originalRequest?._retry || !refreshToken){
+        // If the request itself is /auth/refresh or /auth/logout, or not a 401, or already retried, or no refreshToken is present
+        if (
+            originalRequest.url?.includes("/auth/refresh") ||
+            originalRequest.url?.includes("/auth/logout") ||
+            error.response?.status !== 401 ||
+            originalRequest?._retry ||
+            !refreshToken
+        ) {
+            if (originalRequest.url?.includes("/auth/refresh") || originalRequest.url?.includes("/auth/logout")) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("refreshToken");
+            }
             return Promise.reject(error);
         }
 
@@ -39,13 +50,22 @@ api.interceptors.response.use(
                 localStorage.setItem("refreshToken", payload.refreshToken);
                 return payload.accessToken || payload.token;
             })
+            .catch((err) => {
+                localStorage.removeItem("token");
+                localStorage.removeItem("refreshToken");
+                throw err;
+            })
             .finally(() => {
                 refreshPromise = null;
             });
 
-        const token = await refreshPromise;
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return api(originalRequest);
+        try {
+            const token = await refreshPromise;
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+        } catch (err) {
+            return Promise.reject(err);
+        }
     }
 );
 

@@ -1,12 +1,14 @@
 import { Loader2, Save, User } from 'lucide-react';
 import { useState } from 'react'
 import api from '../api/axios';
-import { getErrorMessage } from '../api/helpers';
+import { getErrorMessage, unwrap } from '../api/helpers';
+import { useAuth } from '../context/AuthContext';
 
 const ProfileForm = ({initialData, onSuccess}) => {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
+    const { setUser } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -15,7 +17,11 @@ const ProfileForm = ({initialData, onSuccess}) => {
         setMessage("")
         const formData = new FormData(e.currentTarget)
         try {
-            await api.patch("/employees/me/profile", formData)
+            const response = await api.patch("/employees/me/profile", formData)
+            const data = unwrap(response);
+            if (data.employee) {
+                setUser((prev) => ({ ...prev, ...data.employee }));
+            }
             setMessage("Profile updated successfully")
             onSuccess?.()
         } catch (err) {

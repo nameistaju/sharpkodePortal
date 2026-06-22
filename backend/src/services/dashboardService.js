@@ -8,6 +8,7 @@ import { endOfDay, startOfDay } from '../utils/date.js';
 import { todayStatus } from './attendanceService.js';
 
 export const adminDashboard = async () => {
+  const reqStart = performance.now();
   const today = startOfDay();
   const todayEnd = endOfDay(today);
 
@@ -21,6 +22,11 @@ export const adminDashboard = async () => {
     }),
     Client.countDocuments({ status: CLIENT_STATUS.ACTIVE })
   ]);
+  const reqEnd = performance.now();
+
+  console.log(`[PERF_AUDIT] GET /dashboard/admin:
+  - total_duration: ${(reqEnd - reqStart).toFixed(2)}ms
+  - db_query_duration: ${(reqEnd - reqStart).toFixed(2)}ms`);
 
   return {
     totalEmployees,
