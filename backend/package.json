@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "lint": "node --check src/server.js",
-    "show-bootstrap-users": "node scripts/showBootstrapUsers.js"
+    "show-bootstrap-users": "node scripts/showBootstrapUsers.js",
+    "seed-users": "node scripts/seedAdminAndEmployee.js"
   },
   "keywords": [
     "sharpkode",

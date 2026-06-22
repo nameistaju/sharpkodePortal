@@ -16,12 +16,54 @@ const EmployeeForm = ({initialData, onSuccess, onCancel}) => {
         if(!data.joinDate) delete data.joinDate;
         if(!data.dob) delete data.dob;
 
+        if (!isEditMode) {
+            const password = data.password;
+            const confirmPassword = data.confirmPassword;
+
+            if (password !== confirmPassword) {
+                toast.error("Passwords do not match");
+                setLoading(false);
+                return;
+            }
+
+            if (password.length < 8) {
+                toast.error("Password must be at least 8 characters");
+                setLoading(false);
+                return;
+            }
+
+            if (!/[A-Z]/.test(password)) {
+                toast.error("Password must contain at least one uppercase letter");
+                setLoading(false);
+                return;
+            }
+
+            if (!/[a-z]/.test(password)) {
+                toast.error("Password must contain at least one lowercase letter");
+                setLoading(false);
+                return;
+            }
+
+            if (!/[0-9]/.test(password)) {
+                toast.error("Password must contain at least one number");
+                setLoading(false);
+                return;
+            }
+
+            if (!/[^A-Za-z0-9]/.test(password)) {
+                toast.error("Password must contain at least one special character");
+                setLoading(false);
+                return;
+            }
+        }
+
         try {
             const id = initialData?._id;
             if(isEditMode){
                 delete data.email;
                 await api.patch(`/employees/${id}`, data)
             } else {
+                delete data.confirmPassword;
                 await api.post("/employees", data)
             }
             toast.success(isEditMode ? "Employee updated" : "Employee created")
@@ -80,6 +122,18 @@ const EmployeeForm = ({initialData, onSuccess, onCancel}) => {
                             <option value="INACTIVE">Inactive</option>
                         </select>
                     </div>
+                )}
+                {!isEditMode && (
+                    <>
+                        <div>
+                            <label className="block mb-2">Password</label>
+                            <input type="password" name="password" required />
+                        </div>
+                        <div>
+                            <label className="block mb-2">Confirm Password</label>
+                            <input type="password" name="confirmPassword" required />
+                        </div>
+                    </>
                 )}
             </div>
         </div>

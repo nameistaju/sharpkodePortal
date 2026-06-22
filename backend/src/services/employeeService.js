@@ -2,7 +2,6 @@ import Client from '../models/Client.js';
 import Employee from '../models/Employee.js';
 import { EMPLOYEE_STATUS } from '../constants/index.js';
 import AppError from '../utils/AppError.js';
-import { generateTemporaryPassword } from '../utils/password.js';
 import { escapeRegex, paginated } from '../utils/query.js';
 import { uploadImageBuffer } from './uploadService.js';
 
@@ -26,14 +25,11 @@ export const createEmployee = async (payload, actorId, file) => {
     throw new AppError('Employee with this email already exists', 409);
   }
 
-  const temporaryPassword = generateTemporaryPassword();
-
   const profilePhoto = file ? await uploadImageBuffer(file) : payload.profilePhoto;
 
   const employee = await Employee.create({
     ...payload,
     profilePhoto,
-    password: temporaryPassword,
     forcePasswordChange: true,
     mustChangePassword: true,
     createdBy: actorId
@@ -41,7 +37,7 @@ export const createEmployee = async (payload, actorId, file) => {
 
   await syncClientAssignments(employee._id, payload.assignedClients || []);
 
-  return { employee, temporaryPassword };
+  return { employee };
 };
 
 export const getEmployees = async (query) => {

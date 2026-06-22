@@ -29,12 +29,18 @@ export const createEmployeeSchema = z.object({
   role: z.enum(Object.values(ROLES)).default(ROLES.EMPLOYEE),
   status: z.enum(Object.values(EMPLOYEE_STATUS)).optional(),
   profilePhoto: profilePhotoSchema,
-  assignedClients: z.array(objectId).optional()
+  assignedClients: z.array(objectId).optional(),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters long')
+    .refine((val) => /[A-Z]/.test(val), 'Password must contain at least one uppercase letter')
+    .refine((val) => /[a-z]/.test(val), 'Password must contain at least one lowercase letter')
+    .refine((val) => /[0-9]/.test(val), 'Password must contain at least one number')
+    .refine((val) => /[^A-Za-z0-9]/.test(val), 'Password must contain at least one special character')
 });
 
 export const updateEmployeeSchema = createEmployeeSchema
   .partial()
-  .omit({ email: true })
+  .omit({ email: true, password: true })
   .extend({
     assignedClients: z.array(objectId).optional()
   });
