@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from "react"
+import { Navigate } from "react-router-dom"
 import { DEPARTMENTS } from "../assets/assets"
 import { Plus, Search, X } from "lucide-react"
 import EmployeeCard from "../components/EmployeeCard"
 import EmployeeForm from "../components/EmployeeForm"
 import api from "../api/axios"
-import { getErrorMessage, unwrapItems } from "../api/helpers"
-import toast from "react-hot-toast"
+import { toastError, unwrapItems } from "../api/helpers"
 import EmptyState from "../components/EmptyState"
+import { useAuth } from "../context/AuthContext"
 
 const Employees = () => {
+  const { user, token } = useAuth()
   const [employees, setEmployees] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("");
@@ -17,6 +19,7 @@ const Employees = () => {
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   const fetchEmployees = useCallback(async ()=> {
+    if (!token || !user) return;
     try {
       const params = new URLSearchParams();
       if(selectedDept) params.set("department", selectedDept);
@@ -24,13 +27,19 @@ const Employees = () => {
       const res = await api.get(`/employees?${params.toString()}`)
       setEmployees(unwrapItems(res))
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      toastError(error);
     }finally{
       setLoading(false)
     }
-  }, [selectedDept, search])
+  }, [selectedDept, search, token, user])
 
-  useEffect(()=>{ fetchEmployees(); },[fetchEmployees])
+  useEffect(()=>{
+    fetchEmployees();
+  },[fetchEmployees])
+
+  if (user?.role !== "ADMIN") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="animate-fade-in">

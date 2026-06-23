@@ -1,25 +1,26 @@
 import { useCallback, useEffect, useState } from "react"
 import api from "../api/axios"
 import toast from "react-hot-toast"
-import { employeeName, formatDate, getErrorMessage, unwrapItems } from "../api/helpers"
+import { employeeName, formatDate, toastError, unwrapItems } from "../api/helpers"
 import { useAuth } from "../context/AuthContext"
 import EmptyState from "../components/EmptyState"
 
 const OUTCOMES = ["POSITIVE", "NEUTRAL", "NEGATIVE", "FOLLOW_UP_REQUIRED", "CLOSED"]
 
 const Visits = () => {
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const [items, setItems] = useState([])
   const [clients, setClients] = useState([])
   const canCreateVisit = user?.department === "MARKETING"
 
   const load = useCallback(async () => {
+    if (!token || !user) return;
     try {
       const [visitResponse, clientResponse] = await Promise.all([api.get("/client-visits"), api.get("/clients")])
       setItems(unwrapItems(visitResponse))
       setClients(unwrapItems(clientResponse))
-    } catch (error) { toast.error(getErrorMessage(error)) }
-  }, [])
+    } catch (error) { toastError(error) }
+  }, [token, user])
 
   useEffect(()=>{ load() }, [load])
 
@@ -30,7 +31,7 @@ const Visits = () => {
       toast.success("Visit recorded")
       event.currentTarget.reset()
       load()
-    } catch (error) { toast.error(getErrorMessage(error)) }
+    } catch (error) { toastError(error) }
   }
 
   return (

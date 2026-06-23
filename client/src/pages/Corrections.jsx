@@ -1,21 +1,22 @@
 import { useCallback, useEffect, useState } from "react"
 import api from "../api/axios"
 import toast from "react-hot-toast"
-import { employeeName, formatDate, getErrorMessage, unwrapItems } from "../api/helpers"
+import { employeeName, formatDate, toastError, unwrapItems } from "../api/helpers"
 import { useAuth } from "../context/AuthContext"
 import EmptyState from "../components/EmptyState"
 
 const TYPES = ["PUNCH_IN", "PUNCH_OUT", "BOTH"]
 
 const Corrections = () => {
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const isAdmin = user?.role === "ADMIN"
   const [items, setItems] = useState([])
 
   const load = useCallback(async () => {
+    if (!token || !user) return;
     try { setItems(unwrapItems(await api.get("/attendance-corrections"))) }
-    catch (error) { toast.error(getErrorMessage(error)) }
-  }, [])
+    catch (error) { toastError(error) }
+  }, [token, user])
 
   useEffect(()=>{ load() }, [load])
 
@@ -29,12 +30,12 @@ const Corrections = () => {
       toast.success("Correction request submitted")
       event.currentTarget.reset()
       load()
-    } catch (error) { toast.error(getErrorMessage(error)) }
+    } catch (error) { toastError(error) }
   }
 
   const review = async (id, action) => {
     try { await api.post(`/attendance-corrections/${id}/${action}`, {}); toast.success(`Request ${action}d`); load() }
-    catch (error) { toast.error(getErrorMessage(error)) }
+    catch (error) { toastError(error) }
   }
 
   return (

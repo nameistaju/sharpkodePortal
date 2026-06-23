@@ -24,8 +24,21 @@ router.put(
   validate({ body: attendanceSettingSchema }),
   attendanceController.configureOffice
 );
-router.post('/punch-in', attendanceLimiter, validate({ body: punchSchema }), attendanceController.punchIn);
-router.post('/punch-out', attendanceLimiter, validate({ body: punchSchema }), attendanceController.punchOut);
+router.get('/status', attendanceController.getTodayStatus);
+router.post(
+  '/punch-in',
+  authorizeRoles(ROLES.EMPLOYEE),
+  attendanceLimiter,
+  validate({ body: punchSchema }),
+  attendanceController.punchIn
+);
+router.post(
+  '/punch-out',
+  authorizeRoles(ROLES.EMPLOYEE),
+  attendanceLimiter,
+  validate({ body: punchSchema }),
+  attendanceController.punchOut
+);
 router.get('/history', validate({ query: attendanceHistoryQuerySchema }), attendanceController.history);
 router.get('/monthly-summary', validate({ query: monthlySummaryQuerySchema }), attendanceController.monthlySummary);
 

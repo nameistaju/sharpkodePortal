@@ -20,11 +20,20 @@ const ChangePassword = () => {
     event.preventDefault();
     setSaving(true);
     const formData = new FormData(event.currentTarget);
+    const currentPassword = formData.get("currentPassword");
+    const newPassword = formData.get("newPassword");
+    const confirmPassword = formData.get("confirmPassword");
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      setSaving(false);
+      return;
+    }
 
     try {
       const data = unwrap(await api.post("/auth/change-password", {
-        currentPassword: formData.get("currentPassword"),
-        newPassword: formData.get("newPassword")
+        currentPassword,
+        newPassword
       }));
 
       localStorage.setItem("token", data.accessToken || data.token);
@@ -34,7 +43,37 @@ const ChangePassword = () => {
       toast.success("Password changed successfully");
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      if (import.meta.env.DEV) {
+        console.log("Full validation response/error:", error?.response?.data || error);
+      }
+
+      let errorMsg = getErrorMessage(error);
+      const details = error.response?.data?.details;
+      if (Array.isArray(details) && details.length > 0) {
+        const errorMessages = details.map((d) => {
+          if (d.field === "newPassword") {
+            const msg = d.message;
+            if (
+              msg.includes("at least 8 characters") ||
+              msg.includes("uppercase") ||
+              msg.includes("lowercase") ||
+              msg.includes("number") ||
+              msg.includes("special character") ||
+              msg.includes("complexity") ||
+              msg.includes("strong")
+            ) {
+              return "Password must contain at least 8 characters, uppercase, lowercase, number, and special character.";
+            }
+            return msg;
+          }
+          if (d.field === "currentPassword") {
+            return "Current password is required.";
+          }
+          return d.message;
+        });
+        errorMsg = errorMessages.filter(Boolean).join(" ");
+      }
+      toast.error(errorMsg);
     } finally {
       setSaving(false);
     }
@@ -64,6 +103,10 @@ const ChangePassword = () => {
             <p className="text-xs text-slate-500 mt-2">
               Use at least 8 characters with uppercase, lowercase, number, and special character.
             </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Confirm new password</label>
+            <input type="password" name="confirmPassword" required autoComplete="new-password" />
           </div>
           <button type="submit" disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
             {saving && <Loader2Icon className="w-4 h-4 animate-spin" />}

@@ -1,19 +1,20 @@
 import { useCallback, useEffect, useState } from "react"
 import api from "../api/axios"
 import toast from "react-hot-toast"
-import { getErrorMessage, formatDate, unwrapItems } from "../api/helpers"
+import { formatDate, toastError, unwrapItems } from "../api/helpers"
 import { useAuth } from "../context/AuthContext"
 import EmptyState from "../components/EmptyState"
 
 const Announcements = () => {
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const isAdmin = user?.role === "ADMIN"
   const [items, setItems] = useState([])
 
   const load = useCallback(async () => {
+    if (!token || !user) return;
     try { setItems(unwrapItems(await api.get("/announcements?activeOnly=true"))) }
-    catch (error) { toast.error(getErrorMessage(error)) }
-  }, [])
+    catch (error) { toastError(error) }
+  }, [token, user])
 
   useEffect(()=>{ load() }, [load])
 
@@ -26,7 +27,7 @@ const Announcements = () => {
       toast.success("Announcement published")
       event.currentTarget.reset()
       load()
-    } catch (error) { toast.error(getErrorMessage(error)) }
+    } catch (error) { toastError(error) }
   }
 
   return (

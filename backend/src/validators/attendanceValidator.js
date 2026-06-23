@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { objectId, paginationQuerySchema } from './commonValidator.js';
 
 const coordinateSchema = z.object({
-  latitude: z.coerce.number().min(-90).max(90),
-  longitude: z.coerce.number().min(-180).max(180),
+  latitude: z.any().optional(),
+  longitude: z.any().optional(),
   notes: z.string().trim().max(500).optional()
 });
 

@@ -1,5 +1,4 @@
 import Attendance from '../models/Attendance.js';
-import AttendanceSetting from '../models/AttendanceSetting.js';
 import Employee from '../models/Employee.js';
 import Leave from '../models/Leave.js';
 import mongoose from 'mongoose';
@@ -8,29 +7,30 @@ import AppError from '../utils/AppError.js';
 import { endOfDay, getMonthRange, startOfDay } from '../utils/date.js';
 import { isInsideRadius } from '../utils/location.js';
 import { paginated } from '../utils/query.js';
-
-const getActiveSetting = async () => {
-  const setting = await AttendanceSetting.findOne({ isActive: true }).sort({ updatedAt: -1 });
-
-  if (!setting) {
-    throw new AppError('Attendance office settings are not configured', 400);
-  }
-
-  return setting;
-};
+import { OFFICE_LOCATION } from '../config/attendanceConfig.js';
 
 const validateLocation = async ({ latitude, longitude }) => {
-  const setting = await getActiveSetting();
+  if (latitude === undefined || latitude === null || longitude === undefined || longitude === null) {
+    throw new AppError('GPS location unavailable', 400);
+  }
+
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+
+  if (isNaN(lat) || lat < -90 || lat > 90 || isNaN(lng) || lng < -180 || lng > 180) {
+    throw new AppError('GPS location unavailable', 400);
+  }
+
   const result = isInsideRadius(
-    { latitude, longitude },
-    { latitude: setting.officeLatitude, longitude: setting.officeLongitude },
-    setting.allowedRadiusMeters
+    { latitude: lat, longitude: lng },
+    { latitude: OFFICE_LOCATION.latitude, longitude: OFFICE_LOCATION.longitude },
+    OFFICE_LOCATION.radiusMeters
   );
 
   if (!result.isInside) {
-    throw new AppError('Attendance is allowed only inside office radius', 403, {
+    throw new AppError('User is outside office radius', 400, {
       distanceFromOfficeMeters: result.distanceFromOfficeMeters,
-      allowedRadiusMeters: setting.allowedRadiusMeters
+      allowedRadiusMeters: OFFICE_LOCATION.radiusMeters
     });
   }
 
@@ -38,23 +38,27 @@ const validateLocation = async ({ latitude, longitude }) => {
 };
 
 export const configureOffice = async (payload, actorId) => {
-  await AttendanceSetting.updateMany({ isActive: true }, { $set: { isActive: false } });
-
-  return AttendanceSetting.create({
-    ...payload,
-    updatedBy: actorId,
-    isActive: true
-  });
+  return {
+    officeLatitude: OFFICE_LOCATION.latitude,
+    officeLongitude: OFFICE_LOCATION.longitude,
+    allowedRadiusMeters: OFFICE_LOCATION.radiusMeters
+  };
 };
 
-export const getOfficeSetting = () => AttendanceSetting.findOne({ isActive: true }).sort({ updatedAt: -1 });
+export const getOfficeSetting = async () => {
+  return {
+    officeLatitude: OFFICE_LOCATION.latitude,
+    officeLongitude: OFFICE_LOCATION.longitude,
+    allowedRadiusMeters: OFFICE_LOCATION.radiusMeters
+  };
+};
 
 export const punchIn = async (employeeId, payload) => {
   const date = startOfDay();
   const existing = await Attendance.findOne({ employee: employeeId, date });
 
   if (existing?.punchIn?.time) {
-    throw new AppError('Punch in already recorded for today', 409);
+    throw new AppError('Already punched in today', 400);
   }
 
   const distanceFromOfficeMeters = await validateLocation(payload);
@@ -89,7 +93,7 @@ export const punchOut = async (employeeId, payload) => {
   }
 
   if (attendance.punchOut?.time) {
-    throw new AppError('Punch out already recorded for today', 409);
+    throw new AppError('Already punched out today', 400);
   }
 
   const distanceFromOfficeMeters = await validateLocation(payload);

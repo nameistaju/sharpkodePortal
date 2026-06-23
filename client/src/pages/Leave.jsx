@@ -5,26 +5,26 @@ import LeaveHistory from "../components/leave/LeaveHistory"
 import ApplyLeaveModal from "../components/leave/ApplyLeaveModal"
 import { useAuth } from "../context/AuthContext"
 import api from "../api/axios"
-import toast from "react-hot-toast"
-import { getErrorMessage, unwrapItems } from "../api/helpers"
+import { toastError, unwrapItems } from "../api/helpers"
 
 const Leave = () => {
-  const {user} = useAuth()
+  const {user, token} = useAuth()
   const [leaves, setLeaves] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const isAdmin = user?.role === "ADMIN";
 
   const fetchLeaves = useCallback(async ()=>{
+   if (!token || !user) return;
    try {
     const res = await api.get('/leaves');
     setLeaves(unwrapItems(res))
    } catch (error) {
-    toast.error(getErrorMessage(error))
+    toastError(error)
    }finally{
     setLoading(false)
    }
-  },[])
+  },[token, user])
 
   useEffect(()=>{ fetchLeaves() },[fetchLeaves])
 

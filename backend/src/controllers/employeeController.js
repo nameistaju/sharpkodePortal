@@ -39,8 +39,18 @@ export const activateEmployee = catchAsync(async (req, res) => {
 });
 
 export const resetEmployeePassword = catchAsync(async (req, res) => {
-  const result = await authService.resetEmployeePassword(req.params.employeeId, req.body?.newPassword);
+  const result = await authService.resetEmployeePassword(req.params.employeeId, req.body?.newPassword, req.user);
   sendSuccess(res, 200, 'Employee password reset successfully', result);
+});
+
+export const getEmployeeSecurity = catchAsync(async (req, res) => {
+  const result = await employeeService.getEmployeeSecurity(req.params.employeeId);
+  sendSuccess(res, 200, 'Employee security settings fetched successfully', result);
+});
+
+export const logoutEmployeeFromAllDevices = catchAsync(async (req, res) => {
+  const employee = await employeeService.logoutEmployeeFromAllDevices(req.params.employeeId);
+  sendSuccess(res, 200, 'Employee logged out from all devices successfully', { employee });
 });
 
 export const getProfile = catchAsync(async (req, res) => {

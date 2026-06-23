@@ -1,32 +1,47 @@
 import { useCallback, useEffect, useState } from "react"
+import { Navigate } from "react-router-dom"
 import Loading from "../components/Loading"
 import CheckInButton from "../components/attendance/CheckInButton"
 import AttendanceStats from "../components/attendance/AttendanceStats"
 import AttendanceHistory from "../components/attendance/AttendanceHistory"
 import api from "../api/axios"
-import {toast} from 'react-hot-toast'
-import { getErrorMessage, unwrapItems } from "../api/helpers"
+import { toastError, unwrap, unwrapItems } from "../api/helpers"
+import { useAuth } from "../context/AuthContext"
 
 const Attendance = () => {
+  const { user, token } = useAuth()
   const [history, setHistory] = useState([])
+  const [todayRecord, setTodayRecord] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async ()=>{
+    if (!token || !user) return;
     try {
-      const res = await api.get("/attendance/history");
-      setHistory(unwrapItems(res))
+      const [historyRes, statusRes] = await Promise.all([
+        api.get("/attendance/history"),
+        api.get("/attendance/status")
+      ]);
+      setHistory(unwrapItems(historyRes));
+      const statusData = unwrap(statusRes);
+      setTodayRecord(statusData?.status?.attendance || null);
     } catch (error) {
-      toast.error(getErrorMessage(error))
-    }finally{
-      setLoading(false)
+      toastError(error);
+    } finally {
+      setLoading(false);
     }
-  },[])
+  },[token, user])
 
-  useEffect(()=>{ fetchData() },[fetchData]);
+  useEffect(()=>{
+    fetchData();
+  },[fetchData]);
+
+  if (user?.role === "ADMIN") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   if (loading) return <Loading />
 
-  const todayRecord = history.find((r)=> new Date(r.date).toDateString() === new Date().toDateString())
+
 
   return (
     <div className="animate-fade-in">

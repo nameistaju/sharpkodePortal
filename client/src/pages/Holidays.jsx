@@ -1,25 +1,26 @@
 import { useCallback, useEffect, useState } from "react"
 import api from "../api/axios"
 import toast from "react-hot-toast"
-import { getErrorMessage, formatDate, unwrapItems } from "../api/helpers"
+import { formatDate, toastError, unwrapItems } from "../api/helpers"
 import { useAuth } from "../context/AuthContext"
 import EmptyState from "../components/EmptyState"
 
 const Holidays = () => {
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const isAdmin = user?.role === "ADMIN"
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
+    if (!token || !user) return;
     try {
       setItems(unwrapItems(await api.get("/holidays")))
     } catch (error) {
-      toast.error(getErrorMessage(error))
+      toastError(error)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [token, user])
 
   useEffect(()=>{ load() }, [load])
 
@@ -31,7 +32,7 @@ const Holidays = () => {
       event.currentTarget.reset()
       load()
     } catch (error) {
-      toast.error(getErrorMessage(error))
+      toastError(error)
     }
   }
 

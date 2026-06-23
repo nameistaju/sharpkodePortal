@@ -73,5 +73,16 @@ router.post(
   validate({ params: employeeIdParamsSchema, body: resetPasswordSchema }),
   employeeController.resetEmployeePassword
 );
+router.get(
+  '/:employeeId/security',
+  validate({ params: employeeIdParamsSchema }),
+  employeeController.getEmployeeSecurity
+);
+router.post(
+  '/:employeeId/logout-all',
+  writeLimiter,
+  validate({ params: employeeIdParamsSchema }),
+  employeeController.logoutEmployeeFromAllDevices
+);
 
 export default router;

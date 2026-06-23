@@ -14,11 +14,20 @@ const ChangePasswordModal = ({open, onClose }) => {
         setLoading(true)
         setMessage({ type: "", text: "" });
         const formData = new FormData(e.currentTarget)
+        const currentPassword = formData.get("currentPassword");
+        const newPassword = formData.get("newPassword");
+        const confirmPassword = formData.get("confirmPassword");
+
+        if (newPassword !== confirmPassword) {
+            setMessage({ type: "error", text: "Passwords do not match." });
+            setLoading(false);
+            return;
+        }
 
         try {
             const data = unwrap(await api.post("/auth/change-password", {
-                currentPassword: formData.get("currentPassword"),
-                newPassword: formData.get("newPassword")
+                currentPassword,
+                newPassword
             }));
             localStorage.setItem("token", data.accessToken || data.token);
             localStorage.setItem("refreshToken", data.refreshToken);
@@ -26,7 +35,37 @@ const ChangePasswordModal = ({open, onClose }) => {
             setMessage({type: "success", text: "Password updated successfully"})
             e.target.reset();
         } catch (error) {
-            setMessage({ type: "error", text: getErrorMessage(error) })
+            if (import.meta.env.DEV) {
+                console.log("Full validation response/error:", error?.response?.data || error);
+            }
+
+            let errorMsg = getErrorMessage(error);
+            const details = error.response?.data?.details;
+            if (Array.isArray(details) && details.length > 0) {
+                const errorMessages = details.map((d) => {
+                    if (d.field === "newPassword") {
+                        const msg = d.message;
+                        if (
+                            msg.includes("at least 8 characters") ||
+                            msg.includes("uppercase") ||
+                            msg.includes("lowercase") ||
+                            msg.includes("number") ||
+                            msg.includes("special character") ||
+                            msg.includes("complexity") ||
+                            msg.includes("strong")
+                        ) {
+                            return "Password must contain at least 8 characters, uppercase, lowercase, number, and special character.";
+                        }
+                        return msg;
+                    }
+                    if (d.field === "currentPassword") {
+                        return "Current password is required.";
+                    }
+                    return d.message;
+                });
+                errorMsg = errorMessages.filter(Boolean).join(" ");
+            }
+            setMessage({ type: "error", text: errorMsg });
         }finally{
             setLoading(false);
         }
@@ -57,6 +96,10 @@ const ChangePasswordModal = ({open, onClose }) => {
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">New Password</label>
                     <input type="password" name="newPassword" required/>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Confirm New Password</label>
+                    <input type="password" name="confirmPassword" required/>
                 </div>
                 <div className='flex gap-3 pt-2'>
                     <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>

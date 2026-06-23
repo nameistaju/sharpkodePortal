@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useState } from "react"
 import api from "../api/axios"
 import toast from "react-hot-toast"
-import { employeeName, formatDateTime, getErrorMessage, unwrapItems } from "../api/helpers"
+import { employeeName, formatDateTime, toastError, unwrapItems } from "../api/helpers"
 import EmptyState from "../components/EmptyState"
+import { useAuth } from "../context/AuthContext"
 
 const ACTIVITY_TYPES = ["POSTER_CREATED", "VIDEO_UPLOADED", "CAMPAIGN_STARTED", "CLIENT_APPROVED", "OTHER"]
 
 const Activities = () => {
+  const { user, token } = useAuth()
   const [items, setItems] = useState([])
   const [clients, setClients] = useState([])
 
   const load = useCallback(async () => {
+    if (!token || !user) return;
     try {
       const [activityResponse, clientResponse] = await Promise.all([api.get("/client-activities/feed"), api.get("/clients")])
       setItems(unwrapItems(activityResponse))
       setClients(unwrapItems(clientResponse))
-    } catch (error) { toast.error(getErrorMessage(error)) }
-  }, [])
+    } catch (error) { toastError(error) }
+  }, [token, user])
 
   useEffect(()=>{ load() }, [load])
 
@@ -27,7 +30,7 @@ const Activities = () => {
       toast.success("Activity logged")
       event.currentTarget.reset()
       load()
-    } catch (error) { toast.error(getErrorMessage(error)) }
+    } catch (error) { toastError(error) }
   }
 
   return (

@@ -22,6 +22,11 @@ export const punchOut = catchAsync(async (req, res) => {
   sendSuccess(res, 200, 'Punch out recorded successfully', { attendance });
 });
 
+export const getTodayStatus = catchAsync(async (req, res) => {
+  const status = await attendanceService.todayStatus(req.user._id);
+  sendSuccess(res, 200, 'Today\'s attendance status fetched successfully', { status });
+});
+
 export const history = catchAsync(async (req, res) => {
   const result = await attendanceService.history(req.user, req.validatedQuery || req.query);
   sendSuccess(res, 200, 'Attendance history fetched successfully', result);

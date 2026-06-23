@@ -19,7 +19,14 @@ export const employeeQuerySchema = paginationQuerySchema.extend({
   role: z.enum(Object.values(ROLES)).optional()
 });
 
-export const createEmployeeSchema = z.object({
+const passwordComplexitySchema = z.string()
+  .min(8, 'Password must be at least 8 characters long')
+  .refine((val) => /[A-Z]/.test(val), 'Password must contain at least one uppercase letter')
+  .refine((val) => /[a-z]/.test(val), 'Password must contain at least one lowercase letter')
+  .refine((val) => /[0-9]/.test(val), 'Password must contain at least one number')
+  .refine((val) => /[^A-Za-z0-9]/.test(val), 'Password must contain at least one special character');
+
+const employeeBaseSchema = z.object({
   name: z.string().trim().min(2).max(120),
   phone: z.string().trim().min(7).max(20),
   email: z.string().trim().toLowerCase().email(),
@@ -30,19 +37,22 @@ export const createEmployeeSchema = z.object({
   status: z.enum(Object.values(EMPLOYEE_STATUS)).optional(),
   profilePhoto: profilePhotoSchema,
   assignedClients: z.array(objectId).optional(),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters long')
-    .refine((val) => /[A-Z]/.test(val), 'Password must contain at least one uppercase letter')
-    .refine((val) => /[a-z]/.test(val), 'Password must contain at least one lowercase letter')
-    .refine((val) => /[0-9]/.test(val), 'Password must contain at least one number')
-    .refine((val) => /[^A-Za-z0-9]/.test(val), 'Password must contain at least one special character')
+  autoGeneratePassword: z.boolean().optional(),
+  password: passwordComplexitySchema.optional()
 });
 
-export const updateEmployeeSchema = createEmployeeSchema
+export const createEmployeeSchema = employeeBaseSchema.refine((data) => data.autoGeneratePassword || data.password, {
+  path: ['password'],
+  message: 'Password is required when auto-generation is disabled'
+});
+
+export const updateEmployeeSchema = employeeBaseSchema
   .partial()
   .omit({ email: true, password: true })
   .extend({
-    assignedClients: z.array(objectId).optional()
+    assignedClients: z.array(objectId).optional(),
+    password: passwordComplexitySchema.optional(),
+    forcePasswordChange: z.boolean().optional()
   });
 
 export const updateProfileSchema = z.object({

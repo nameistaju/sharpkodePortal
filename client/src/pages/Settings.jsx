@@ -5,27 +5,27 @@ import ProfileForm from "../components/ProfileForm"
 import ChangePasswordModal from "../components/ChangePasswordModal"
 import { useAuth } from "../context/AuthContext"
 import api from "../api/axios"
-import toast from "react-hot-toast"
-import { getErrorMessage, unwrap } from "../api/helpers"
+import { toastError, unwrap } from "../api/helpers"
 
 const Settings = () => {
-  const {user} = useAuth()
+  const {user, token} = useAuth()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
 
   const fetchProfile = async () => {
+   if (!token || !user) return;
    try {
     const data = unwrap(await api.get("/employees/me/profile"))
     if(data.employee) setProfile(data.employee)
    } catch (err) {
-    toast.error(getErrorMessage(err))
+    toastError(err)
    }finally{
     setLoading(false)
    }
   }
 
-  useEffect(()=>{ fetchProfile() },[user])
+  useEffect(()=>{ fetchProfile() },[token, user])
 
   if(loading) return <Loading />
 

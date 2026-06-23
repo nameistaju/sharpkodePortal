@@ -27,10 +27,26 @@ app.use(
     crossOriginResourcePolicy: { policy: 'cross-origin' }
   })
 );
+const matchOrigin = (origin, allowedOrigins) => {
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+
+  return allowedOrigins.some((allowed) => {
+    if (allowed.includes('*')) {
+      const escaped = allowed.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+      const regexStr = '^' + escaped.replace(/\*/g, '[a-zA-Z0-9-]+') + '$';
+      const regex = new RegExp(regexStr);
+      return regex.test(origin);
+    }
+    return false;
+  });
+};
+
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || !isProduction || env.clientOrigins.includes(origin)) {
+      if (!origin || !isProduction || matchOrigin(origin, env.clientOrigins)) {
         callback(null, true);
         return;
       }

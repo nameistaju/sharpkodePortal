@@ -9,3 +9,5 @@ export { default as Employee } from './Employee.js';
 export { default as Holiday } from './Holiday.js';
 export { default as Leave } from './Leave.js';
 export { default as RefreshToken } from './RefreshToken.js';
+export { default as AuditLog } from './AuditLog.js';
+

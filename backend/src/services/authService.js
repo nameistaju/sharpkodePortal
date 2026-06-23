@@ -1,8 +1,9 @@
 import Employee from '../models/Employee.js';
 import RefreshToken from '../models/RefreshToken.js';
+import AuditLog from '../models/AuditLog.js';
 import { EMPLOYEE_STATUS } from '../constants/index.js';
 import AppError from '../utils/AppError.js';
-import { generateTemporaryPassword } from '../utils/password.js';
+import { generateTemporaryPassword, generateUnpredictablePassword } from '../utils/password.js';
 import {
   createTokenId,
   getRefreshTokenExpiry,
@@ -227,14 +228,14 @@ export const logout = async (userId, refreshToken = null) => {
   await RefreshToken.updateMany(filter, { $set: { revokedAt: new Date() } });
 };
 
-export const resetEmployeePassword = async (employeeId, newPassword = null) => {
+export const resetEmployeePassword = async (employeeId, newPassword = null, adminUser = null) => {
   const employee = await Employee.findById(employeeId).select('+tokenVersion');
 
   if (!employee) {
     throw new AppError('Employee not found', 404);
   }
 
-  const passwordToUse = newPassword || generateTemporaryPassword();
+  const passwordToUse = newPassword || generateUnpredictablePassword(employee.name, employee.dob);
 
   if (!passwordToUse) {
     throw new AppError('Cannot generate temporary password', 400);
@@ -247,10 +248,24 @@ export const resetEmployeePassword = async (employeeId, newPassword = null) => {
 
   await employee.save();
 
-  await RefreshToken.updateMany(
-    { employee: employee._id, revokedAt: { $exists: false } },
-    { $set: { revokedAt: new Date() } }
-  );
+  await RefreshToken.deleteMany({ employee: employee._id });
+
+  if (adminUser) {
+    const timestamp = new Date();
+    await AuditLog.create({
+      employeeEmail: employee.email,
+      action: 'Password Reset',
+      adminEmail: adminUser.email,
+      timestamp
+    });
+
+    logger.info('password_reset_audit', {
+      Employee: employee.email,
+      Action: 'Password Reset',
+      Admin: adminUser.email,
+      Timestamp: timestamp.toISOString()
+    });
+  }
 
   return {
     employee: sanitizeUser(employee),

@@ -53,6 +53,8 @@ api.interceptors.response.use(
             .catch((err) => {
                 localStorage.removeItem("token");
                 localStorage.removeItem("refreshToken");
+                localStorage.removeItem("userRole");
+                window.location.href = "/login";
                 throw err;
             })
             .finally(() => {
