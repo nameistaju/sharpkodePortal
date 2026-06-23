@@ -1,7 +1,7 @@
 export const OFFICE_LOCATION = {
-  latitude: 17.7431,
-  longitude: 83.3012,
-  radiusMeters: 300
+  latitude: 17.7283443,
+  longitude: 83.3144685,
+  radiusMeters: 200
 };
 
 export const AUTO_PUNCH_OUT_HOUR = 20;
