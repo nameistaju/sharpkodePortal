@@ -51,20 +51,22 @@ const Holidays = () => {
         </form>
       )}
       <div className="card overflow-hidden">
-        <table className="table-modern">
-          <thead><tr><th>Name</th><th>Date</th><th>Description</th><th>Type</th></tr></thead>
-          <tbody>
-            {loading ? <tr><td colSpan={4}><div className="skeleton h-5 w-full" /></td></tr> : items.map((item)=>(
-              <tr key={item._id}>
-                <td className="font-medium text-slate-900">{item.name}</td>
-                <td>{formatDate(item.date)}</td>
-                <td>{item.description || "-"}</td>
-                <td><span className="badge bg-slate-100 text-slate-600">{item.isOptional ? "Optional" : "Company"}</span></td>
-              </tr>
-            ))}
-            {!loading && items.length === 0 && <tr><td colSpan={4}><EmptyState title="No holidays scheduled" description="Add holidays so everyone has a clear calendar." /></td></tr>}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="table-modern">
+            <thead><tr><th>Name</th><th>Date</th><th>Description</th><th>Type</th></tr></thead>
+            <tbody>
+              {loading ? <tr><td colSpan={4}><div className="skeleton h-5 w-full" /></td></tr> : items.map((item)=>(
+                <tr key={item._id}>
+                  <td className="font-medium text-slate-900">{item.name}</td>
+                  <td>{formatDate(item.date)}</td>
+                  <td>{item.description || "-"}</td>
+                  <td><span className="badge bg-slate-100 text-slate-600">{item.isOptional ? "Optional" : "Company"}</span></td>
+                </tr>
+              ))}
+              {!loading && items.length === 0 && <tr><td colSpan={4}><EmptyState title="No holidays scheduled" description="Add holidays so everyone has a clear calendar." /></td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

@@ -9,7 +9,7 @@ import api from "../api/axios"
 import { toastError, unwrapItems } from "../api/helpers"
 
 const Leave = () => {
-  const {user, token} = useAuth()
+  const {user, token, refreshSession} = useAuth()
   const outletCtx = useOutletContext()
   const searchQuery = outletCtx?.searchQuery?.toLowerCase() || ""
 
@@ -23,22 +23,30 @@ const Leave = () => {
    try {
     const res = await api.get('/leaves');
     setLeaves(unwrapItems(res))
+    if (user.role !== "ADMIN") {
+      await refreshSession();
+    }
    } catch (error) {
     toastError(error)
    }finally{
     setLoading(false)
    }
-  },[token, user])
+  },[token, user, refreshSession])
 
   useEffect(()=>{ fetchLeaves() },[fetchLeaves])
 
   if(loading) return <Loading />
 
-  const approvedLeaves = leaves.filter((l)=>l.status === "APPROVED");
+  const getRemainingBalance = (type) => {
+    if (!user || !user.leaveBalances) return 0;
+    const balance = user.leaveBalances.find((b) => b.type === type);
+    return balance ? Math.max(0, balance.allocated - balance.used) : 0;
+  };
+
   const leaveStats = [
-    {label: "Sick Leave", value: approvedLeaves.filter((l)=>l.leaveType === "SICK").length, icon: ThermometerIcon},
-    {label: "Casual Leave", value: approvedLeaves.filter((l)=>l.leaveType === "CASUAL").length, icon: UmbrellaIcon},
-    {label: "Annual Leave", value: approvedLeaves.filter((l)=>l.leaveType === "ANNUAL").length, icon: PalmtreeIcon},
+    {label: "Sick Leave", value: getRemainingBalance("SICK"), icon: ThermometerIcon},
+    {label: "Casual Leave", value: getRemainingBalance("CASUAL"), icon: UmbrellaIcon},
+    {label: "Annual Leave", value: getRemainingBalance("ANNUAL"), icon: PalmtreeIcon},
   ]
 
   const filteredLeaves = leaves.filter((l) => {
@@ -71,7 +79,7 @@ const Leave = () => {
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">{s.label}</p>
-                  <p className="text-2xl font-bold text-slate-900 tracking-tight">{s.value} <span className="text-sm font-normal text-slate-400">taken</span></p>
+                  <p className="text-2xl font-bold text-slate-900 tracking-tight">{s.value} <span className="text-sm font-normal text-slate-400">remaining</span></p>
                 </div>
               </div>
             ))}

@@ -66,7 +66,7 @@ const getRecentActivities = async (employeeId = null) => {
       id: `leave-${l._id}`,
       type: 'LEAVE',
       employee: l.employee,
-      title: `Leave Request: ${l.type}`,
+      title: `Leave Request: ${l.leaveType}`,
       desc: `${l.employee?.name || 'Employee'} requested leave from ${new Date(l.startDate).toLocaleDateString()} to ${new Date(l.endDate).toLocaleDateString()}`,
       timestamp: l.updatedAt || l.createdAt,
       status: l.status.toLowerCase()

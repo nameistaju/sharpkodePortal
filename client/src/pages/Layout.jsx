@@ -38,7 +38,7 @@ const Layout = () => {
         if (user.role === "ADMIN") {
           const [leavesRes, correctionsRes] = await Promise.all([
             api.get('/leaves?status=PENDING'),
-            api.get('/corrections?status=PENDING')
+            api.get('/attendance-corrections?status=PENDING')
           ]);
           const leaves = leavesRes.data.data.items || [];
           const corrections = correctionsRes.data.data.items || [];
@@ -74,7 +74,7 @@ const Layout = () => {
           // Employee
           const [leavesRes, correctionsRes] = await Promise.all([
             api.get('/leaves?limit=5'),
-            api.get('/corrections?limit=5')
+            api.get('/attendance-corrections?limit=5')
           ]);
           const leaves = leavesRes.data.data.items || [];
           const corrections = correctionsRes.data.data.items || [];

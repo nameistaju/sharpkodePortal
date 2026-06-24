@@ -9,12 +9,7 @@ import api from "../api/axios"
 import { toastError, unwrap, unwrapItems } from "../api/helpers"
 import { useAuth } from "../context/AuthContext"
 import { Clock, Calendar, Navigation, ShieldCheck, ShieldAlert, MapPin, Compass } from "lucide-react"
-
-const OFFICE_LOCATION = {
-  latitude: 17.7283443,
-  longitude: 83.3144685,
-  radiusMeters: 200
-};
+import { OFFICE_LOCATION } from "../config/officeLocation"
 
 const calculateHaversineDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371e3; // Earth's radius in meters

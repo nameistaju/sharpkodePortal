@@ -4,13 +4,41 @@ import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '../../api/helpers';
 
+import { useAuth } from '../../context/AuthContext';
+
 const ApplyLeaveModal = ({open, onClose, onSuccess}) => {
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true)
         const data = Object.fromEntries(new FormData(e.currentTarget).entries())
+        const { leaveType, startDate, endDate } = data;
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        start.setHours(0,0,0,0);
+        end.setHours(0,0,0,0);
+
+        if (end.getTime() < start.getTime()) {
+            toast.error("End date must be greater than or equal to start date");
+            setLoading(false);
+            return;
+        }
+
+        const requestedDays = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+        if (user && user.leaveBalances) {
+            const balanceObj = user.leaveBalances.find(b => b.type === leaveType);
+            const remainingBalance = balanceObj ? Math.max(0, balanceObj.allocated - balanceObj.used) : 0;
+            if (requestedDays > remainingBalance) {
+                toast.error(`Insufficient leave balance. Requested: ${requestedDays}, Available: ${remainingBalance}`);
+                setLoading(false);
+                return;
+            }
+        }
+
         try {
             await api.post('/leaves', data)
             toast.success("Leave request submitted")

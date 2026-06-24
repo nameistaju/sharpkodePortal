@@ -66,7 +66,7 @@ const CheckInButton = ({ todayRecord, onAction, isInsideRadius, distance, coords
   }
 
   const isCheckedIn = !!todayRecord?.punchIn?.time
-  const isButtonDisabled = loading || loadingCoords || !coords || !isInsideRadius
+  const isButtonDisabled = loading || loadingCoords || !coords || (!isCheckedIn && !isInsideRadius)
 
   // Define states content
   let buttonColorClass = 'bg-linear-to-tr from-emerald-500 to-green-600 shadow-emerald-500/20'
@@ -93,6 +93,12 @@ const CheckInButton = ({ todayRecord, onAction, isInsideRadius, distance, coords
     Icon = ShieldAlert
     text = 'GPS LOCK'
     subtext = 'Enable Location'
+  } else if (isCheckedIn) {
+    buttonColorClass = 'bg-linear-to-tr from-orange-500 to-red-500 shadow-orange-500/20'
+    ringColor = '#F97316'
+    Icon = LogOut
+    text = 'PUNCH OUT'
+    subtext = elapsed || 'Working'
   } else if (!isInsideRadius) {
     buttonColorClass = 'bg-linear-to-tr from-slate-400 to-slate-500 shadow-slate-400/20'
     ringColor = '#94A3B8'
@@ -100,12 +106,6 @@ const CheckInButton = ({ todayRecord, onAction, isInsideRadius, distance, coords
     const remainingDistance = Math.max(0, Math.round(distance - officeRadius))
     text = 'OUTSIDE AREA'
     subtext = `${remainingDistance}m Away`
-  } else if (isCheckedIn) {
-    buttonColorClass = 'bg-linear-to-tr from-orange-500 to-red-500 shadow-orange-500/20'
-    ringColor = '#F97316'
-    Icon = LogOut
-    text = 'PUNCH OUT'
-    subtext = elapsed || 'Working'
   }
 
   return (

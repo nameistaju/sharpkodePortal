@@ -16,7 +16,11 @@ export const getErrorMessage = (error) => {
     if (error?.code === "ECONNABORTED" || error?.message?.includes("aborted")) {
         return null;
     }
-    return error?.response?.data?.message || error?.response?.data?.error || error?.message || "Request failed";
+    const data = error?.response?.data;
+    if (data?.details && Array.isArray(data.details) && data.details.length > 0) {
+        return data.details.map(d => d.message).join(', ');
+    }
+    return data?.message || data?.error || error?.message || "Request failed";
 };
 
 export const toastError = (error) => {

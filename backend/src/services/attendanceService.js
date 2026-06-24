@@ -7,15 +7,21 @@ import AppError from '../utils/AppError.js';
 import { endOfDay, getMonthRange, startOfDay } from '../utils/date.js';
 import { isInsideRadius } from '../utils/location.js';
 import { paginated } from '../utils/query.js';
-import { OFFICE_LOCATION } from '../config/attendanceConfig.js';
+import { latitude, longitude, radius } from '../config/officeLocation.js';
 
-const validateLocation = async ({ latitude, longitude }) => {
-  if (latitude === undefined || latitude === null || longitude === undefined || longitude === null) {
+const OFFICE_LOCATION = {
+  latitude,
+  longitude,
+  radiusMeters: radius
+};
+
+const validateLocation = async ({ latitude: inputLat, longitude: inputLng }, requireRadius = true) => {
+  if (inputLat === undefined || inputLat === null || inputLng === undefined || inputLng === null) {
     throw new AppError('GPS location unavailable', 400);
   }
 
-  const lat = Number(latitude);
-  const lng = Number(longitude);
+  const lat = Number(inputLat);
+  const lng = Number(inputLng);
 
   if (isNaN(lat) || lat < -90 || lat > 90 || isNaN(lng) || lng < -180 || lng > 180) {
     throw new AppError('GPS location unavailable', 400);
@@ -27,7 +33,7 @@ const validateLocation = async ({ latitude, longitude }) => {
     OFFICE_LOCATION.radiusMeters
   );
 
-  if (!result.isInside) {
+  if (requireRadius && !result.isInside) {
     throw new AppError('User is outside office radius', 400, {
       distanceFromOfficeMeters: result.distanceFromOfficeMeters,
       allowedRadiusMeters: OFFICE_LOCATION.radiusMeters
@@ -61,7 +67,7 @@ export const punchIn = async (employeeId, payload) => {
     throw new AppError('Already punched in today', 400);
   }
 
-  const distanceFromOfficeMeters = await validateLocation(payload);
+  const distanceFromOfficeMeters = await validateLocation(payload, true);
   const attendance =
     existing ||
     new Attendance({
@@ -96,7 +102,7 @@ export const punchOut = async (employeeId, payload) => {
     throw new AppError('Already punched out today', 400);
   }
 
-  const distanceFromOfficeMeters = await validateLocation(payload);
+  const distanceFromOfficeMeters = await validateLocation(payload, false);
   const punchOutTime = new Date();
 
   attendance.punchOut = {

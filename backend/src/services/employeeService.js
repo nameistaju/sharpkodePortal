@@ -27,6 +27,11 @@ export const createEmployee = async (payload, actorId, file) => {
     throw new AppError('Employee with this email already exists', 409);
   }
 
+  const existingPhone = await Employee.findOne({ phone: payload.phone });
+  if (existingPhone) {
+    throw new AppError('Phone number already exists', 409);
+  }
+
   const profilePhoto = file ? await uploadImageBuffer(file) : payload.profilePhoto;
 
   let generatedPassword = null;
@@ -100,6 +105,13 @@ export const updateEmployee = async (employeeId, payload, actorId, file) => {
 
   if (!employee) throw new AppError('Employee not found', 404);
 
+  if (payload.phone && payload.phone !== employee.phone) {
+    const existingPhone = await Employee.findOne({ phone: payload.phone, _id: { $ne: employeeId } });
+    if (existingPhone) {
+      throw new AppError('Phone number already exists', 409);
+    }
+  }
+
   const profilePhoto = file ? await uploadImageBuffer(file) : payload.profilePhoto;
   const assignedClients = payload.assignedClients;
   delete payload.assignedClients;
@@ -165,6 +177,13 @@ export const updateProfile = async (employeeId, payload, file) => {
   const employee = await Employee.findById(employeeId);
 
   if (!employee) throw new AppError('Employee not found', 404);
+
+  if (payload.phone && payload.phone !== employee.phone) {
+    const existingPhone = await Employee.findOne({ phone: payload.phone, _id: { $ne: employeeId } });
+    if (existingPhone) {
+      throw new AppError('Phone number already exists', 409);
+    }
+  }
 
   const profilePhoto = file ? await uploadImageBuffer(file) : payload.profilePhoto;
 

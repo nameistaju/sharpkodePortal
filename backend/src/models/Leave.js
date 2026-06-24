@@ -64,11 +64,10 @@ const leaveSchema = new mongoose.Schema(
 leaveSchema.index({ employee: 1, startDate: -1 });
 leaveSchema.index({ status: 1, startDate: 1, endDate: 1 });
 
-leaveSchema.pre('validate', function validateDateRange(next) {
+leaveSchema.pre('validate', function validateDateRange() {
   if (this.startDate && this.endDate && this.endDate < this.startDate) {
     this.invalidate('endDate', 'End date must be greater than or equal to start date');
   }
-  next();
 });
 
 const Leave = mongoose.model('Leave', leaveSchema);

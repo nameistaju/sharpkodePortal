@@ -7,14 +7,9 @@ import {
   PlusCircle, History, ClipboardCheck, Megaphone
 } from 'lucide-react';
 import CheckInButton from './attendance/CheckInButton';
+import { OFFICE_LOCATION } from '../config/officeLocation';
 
 const MotionDiv = motion.div;
-
-const OFFICE_LOCATION = {
-  latitude: 17.7283443,
-  longitude: 83.3144685,
-  radiusMeters: 200
-};
 
 const calculateHaversineDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371e3; // Earth's radius in meters
