@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
+import { useOutletContext } from "react-router-dom"
 import Loading from "../components/Loading"
 import { PalmtreeIcon, PlusIcon, ThermometerIcon, UmbrellaIcon } from "lucide-react"
 import LeaveHistory from "../components/leave/LeaveHistory"
@@ -9,6 +10,9 @@ import { toastError, unwrapItems } from "../api/helpers"
 
 const Leave = () => {
   const {user, token} = useAuth()
+  const outletCtx = useOutletContext()
+  const searchQuery = outletCtx?.searchQuery?.toLowerCase() || ""
+
   const [leaves, setLeaves] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -36,6 +40,13 @@ const Leave = () => {
     {label: "Casual Leave", value: approvedLeaves.filter((l)=>l.leaveType === "CASUAL").length, icon: UmbrellaIcon},
     {label: "Annual Leave", value: approvedLeaves.filter((l)=>l.leaveType === "ANNUAL").length, icon: PalmtreeIcon},
   ]
+
+  const filteredLeaves = leaves.filter((l) => {
+    const empName = l.employee?.name?.toLowerCase() || "";
+    const reason = l.reason?.toLowerCase() || "";
+    const type = l.leaveType?.toLowerCase() || "";
+    return empName.includes(searchQuery) || reason.includes(searchQuery) || type.includes(searchQuery);
+  })
 
   return (
     <div className="animate-fade-in">
@@ -66,7 +77,7 @@ const Leave = () => {
             ))}
           </div>
         )}
-        <LeaveHistory leaves={leaves} isAdmin={isAdmin} onUpdate={fetchLeaves}/>
+        <LeaveHistory leaves={filteredLeaves} isAdmin={isAdmin} onUpdate={fetchLeaves}/>
         <ApplyLeaveModal open={showModal} onClose={()=> setShowModal(false)} onSuccess={fetchLeaves}/>
     </div>
   )

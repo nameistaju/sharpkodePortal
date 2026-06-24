@@ -24,8 +24,8 @@ const Dashboard = () => {
   if(!data) return <p className="text-center text-slate-500 py-12">Failed to load dashboard</p>
 
   return user?.role === "ADMIN"
-    ? <AdminDashboard data={data}/>
-    : <EmployeeDashboard data={data} user={user}/>
+    ? <AdminDashboard data={data} refetch={fetchDashboard}/>
+    : <EmployeeDashboard data={data} user={user} refetch={fetchDashboard}/>
 }
 
 export default Dashboard

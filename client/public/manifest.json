@@ -1,0 +1,22 @@
+{
+  "name": "SharpKode Workforce",
+  "short_name": "Workforce",
+  "description": "Premium workforce and attendance management platform for SharpKode.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5B4CFF",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/Sharpkodelogo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

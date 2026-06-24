@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
+import { useOutletContext } from "react-router-dom"
 import api from "../api/axios"
 import toast from "react-hot-toast"
 import { employeeName, toastError, unwrapItems } from "../api/helpers"
@@ -7,6 +8,9 @@ import EmptyState from "../components/EmptyState"
 
 const Clients = () => {
   const { user, token } = useAuth()
+  const outletCtx = useOutletContext()
+  const searchQuery = outletCtx?.searchQuery?.toLowerCase() || ""
+
   const isAdmin = user?.role === "ADMIN"
   const [items, setItems] = useState([])
 
@@ -36,6 +40,12 @@ const Clients = () => {
     } catch (error) { toastError(error) }
   }
 
+  const filteredItems = items.filter(client => 
+    client.clientName?.toLowerCase().includes(searchQuery) ||
+    client.services?.some(s => s.toLowerCase().includes(searchQuery)) ||
+    (client.notes && client.notes.toLowerCase().includes(searchQuery))
+  )
+
   return (
     <div className="animate-fade-in">
       <div className="page-header"><h1 className="page-title">Client Directory</h1><p className="page-subtitle">Accounts assigned to SharpKode teams</p></div>
@@ -50,7 +60,7 @@ const Clients = () => {
         </form>
       )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {items.map((client)=>(
+        {filteredItems.map((client)=>(
           <div key={client._id} className="card p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -63,7 +73,7 @@ const Clients = () => {
             <p className="text-xs text-slate-400 mt-4">Assigned: {client.assignedEmployees?.map(employeeName).join(", ") || "None"}</p>
           </div>
         ))}
-        {items.length === 0 && <div className="lg:col-span-2 card"><EmptyState title="No clients yet" description="Create client records to connect activities, visits, and assignments." /></div>}
+        {filteredItems.length === 0 && <div className="lg:col-span-2 card"><EmptyState title="No clients found" description="No clients match your current search query." /></div>}
       </div>
     </div>
   )
